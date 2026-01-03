@@ -1,0 +1,84 @@
+--[[
+    Script Name: Bảo Long
+    Feature: Player Selection Menu
+    Language: English (for better compatibility)
+]]
+
+local Players = game:GetService("Players")
+local CoreGui = game:GetService("CoreGui")
+
+-- Create the ScreenGui
+local screenGui = Instance.new("ScreenGui")
+screenGui.Name = "BaoLongMenu"
+screenGui.Parent = CoreGui
+
+-- Main Frame
+local mainFrame = Instance.new("Frame")
+mainFrame.Name = "MainFrame"
+mainFrame.Size = UDim2.new(0, 250, 0, 350)
+mainFrame.Position = UDim2.new(0.5, -125, 0.5, -175)
+mainFrame.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
+mainFrame.BorderSizePixel = 0
+mainFrame.Active = true
+mainFrame.Draggable = true -- Cho phép kéo menu trên màn hình
+mainFrame.Parent = screenGui
+
+-- Title: Bảo Long
+local titleLabel = Instance.new("TextLabel")
+titleLabel.Name = "Title"
+titleLabel.Text = "BẢO LONG MENU"
+titleLabel.Size = UDim2.new(1, 0, 0, 40)
+titleLabel.BackgroundColor3 = Color3.fromRGB(200, 0, 0) -- Màu đỏ nổi bật
+titleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+titleLabel.Font = Enum.Font.SourceSansBold
+titleLabel.TextSize = 20
+titleLabel.Parent = mainFrame
+
+-- Scrolling Frame (Danh sách người chơi)
+local scrollFrame = Instance.new("ScrollingFrame")
+scrollFrame.Size = UDim2.new(1, -10, 1, -50)
+scrollFrame.Position = UDim2.new(0, 5, 0, 45)
+scrollFrame.BackgroundTransparency = 1
+scrollFrame.CanvasSize = UDim2.new(0, 0, 0, 0)
+scrollFrame.Parent = mainFrame
+
+local layout = Instance.new("UIListLayout")
+layout.Parent = scrollFrame
+layout.Padding = UDim.new(0, 5)
+
+-- Function to create player buttons
+local function updateMenu()
+    -- Clear old buttons
+    for _, child in pairs(scrollFrame:GetChildren()) do
+        if child:IsA("TextButton") then child:Destroy() end
+    end
+
+    -- Create new buttons for each player
+    for _, player in pairs(Players:GetPlayers()) do
+        local btn = Instance.new("TextButton")
+        btn.Text = player.Name
+        btn.Size = UDim2.new(1, -10, 0, 30)
+        btn.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+        btn.TextColor3 = Color3.fromRGB(255, 255, 255)
+        btn.Font = Enum.Font.SourceSans
+        btn.TextSize = 16
+        btn.Parent = scrollFrame
+
+        -- Khi nhấn vào tên người chơi
+        btn.MouseButton1Click:Connect(function()
+            print("Target Selected: " .. player.Name)
+            -- Chèn code xử lý lấy cúp hoặc hành động tại đây
+            -- Example: action(player)
+        end)
+    end
+    scrollFrame.CanvasSize = UDim2.new(0, 0, 0, layout.AbsoluteContentSize.Y)
+end
+
+-- Refresh menu when someone joins/leaves
+Players.PlayerAdded:Connect(updateMenu)
+Players.PlayerRemoving:Connect(updateMenu)
+
+-- Initial run
+updateMenu()
+
+print("Bảo Long Menu has been loaded successfully.")
