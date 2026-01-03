@@ -1,0 +1,73 @@
+-- [[ CONFIGURATIONS ]]
+local BOND_VALUE_NAME = "Bond"  -- Name of the Bond stat
+local TRAVEL_SPEED = 150        -- High speed for Tweening (Adjust if kicked)
+local REACH_DISTANCE = 5        -- Distance to instantly teleport & collect
+local RESET_AFTER_DONE = true   -- Auto reset when Bond hits 0
+
+local Players = game:GetService("Players")
+local TweenService = game:GetService("TweenService")
+local LocalPlayer = Players.LocalPlayer
+
+-- [[ FUNCTIONS ]]
+
+-- Optimized Movement: Fast Tween + Snap Teleport
+local function fastMove(targetCFrame)
+    local char = LocalPlayer.Character
+    local root = char and char:FindFirstChild("HumanoidRootPart")
+    if not root then return end
+
+    local distance = (root.Position - targetCFrame.Position).Magnitude
+
+    if distance < REACH_DISTANCE then
+        -- If close enough, snap to position
+        root.CFrame = targetCFrame
+    else
+        -- High-speed tween for long distances
+        local info = TweenInfo.new(distance / TRAVEL_SPEED, Enum.EasingStyle.Linear)
+        local tween = TweenService:Create(root, info, {CFrame = targetCFrame})
+        tween:Play()
+        tween.Completed:Wait()
+    end
+end
+
+-- Function to scan and farm items
+local function startFarming()
+    for _, obj in ipairs(workspace:GetDescendants()) do
+        if obj:IsA("ProximityPrompt") and obj.Parent:IsA("BasePart") then
+            -- Optional: Add specific item filters if needed
+            local targetPart = obj.Parent
+            
+            -- Move to item with offset to avoid getting stuck in ground
+            fastMove(targetPart.CFrame * CFrame.new(0, 3, 0))
+            
+            task.wait(0.1)
+            fireproximityprompt(obj)
+            print("Collected: " .. targetPart.Name)
+            break 
+        end
+    end
+end
+
+-- Function to check Bond and return to lobby
+local function checkBondStatus()
+    local stats = LocalPlayer:FindFirstChild("leaderstats") or LocalPlayer:FindFirstChild("Data")
+    local bond = stats and stats:FindFirstChild(BOND_VALUE_NAME)
+
+    if RESET_AFTER_DONE and bond and bond.Value <= 0 then
+        warn("[SYSTEM] No Bond left. Resetting to Lobby...")
+        if LocalPlayer.Character then
+            LocalPlayer.Character:BreakJoints()
+        end
+        task.wait(5) -- Cooldown for respawn
+    end
+end
+
+-- [[ EXECUTION ]]
+task.spawn(function()
+    print("--- Deadrail GOD MODE Auto-Farm Loaded ---")
+    while true do
+        checkBondStatus()
+        startFarming()
+        task.wait(0.5) -- Small delay to prevent crashing
+    end
+end)
