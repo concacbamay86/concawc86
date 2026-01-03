@@ -1,0 +1,59 @@
+-- [[ CONFIGURATIONS ]]
+local BOND_VALUE_NAME = "Bond"  -- Ensure this matches the game's stat name
+local RESET_METHOD = "Instant"  -- Options: "Health" or "Break"
+
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
+
+-- Function to find Bond Stat
+local function getBondStat()
+    local folder = LocalPlayer:FindFirstChild("PlayerStats") or LocalPlayer:FindFirstChild("leaderstats") or LocalPlayer:FindFirstChild("Data")
+    return folder and (folder:FindFirstChild(BOND_VALUE_NAME) or folder:FindFirstChild("Bonds"))
+end
+
+-- Function to Collect Bond Instantly
+local function instantCollect()
+    local char = LocalPlayer.Character
+    local root = char and char:FindFirstChild("HumanoidRootPart")
+    if not root then return end
+
+    for _, v in ipairs(workspace:GetDescendants()) do
+        if v:IsA("ProximityPrompt") then
+            local target = v.Parent
+            if target and target:IsA("BasePart") then
+                -- Check if it's a Bond/Scrap item
+                if target.Name:find("Bond") or target.Name:find("Scrap") or v.ObjectText:find("Bond") then
+                    -- INSTANT TELEPORT (0.1s logic)
+                    root.CFrame = target.CFrame * CFrame.new(0, 2, 0)
+                    task.wait(0.1)
+                    
+                    -- Trigger Pickup for Delta Executor
+                    fireproximityprompt(v)
+                    break 
+                end
+            end
+        end
+    end
+end
+
+-- Function to Return to Lobby
+local function returnToLobby()
+    local bond = getBondStat()
+    if bond and bond.Value <= 0 then
+        print("[SYSTEM] Out of Bond! Returning to Lobby...")
+        if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid") then
+            -- Instant death to trigger lobby return
+            LocalPlayer.Character.Humanoid.Health = 0
+        end
+        task.wait(3) -- Cooldown for server response
+    end
+end
+
+-- [[ MAIN EXECUTION ]]
+task.spawn(function()
+    print("--- DEADRAIL INSTANT TELEPORT LOADED ---")
+    while task.wait(0.2) do
+        returnToLobby()
+        instantCollect()
+    end
+end)
